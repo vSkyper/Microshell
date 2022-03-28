@@ -80,16 +80,16 @@ void help() {
            "arguments\n>> Support for quotation marks: \"...\"\n");
 }
 
-void cd(char *StringArray[BUFFER_SIZE], char prev_directory_main[BUFFER_SIZE],
+void cd(char *ArgumentsArray[BUFFER_SIZE], char prev_directory_main[BUFFER_SIZE],
         char prev_directory_secondary[BUFFER_SIZE]) {
     getcwd(prev_directory_main, BUFFER_SIZE);
 
-    if (StringArray[1] == NULL || strcmp(StringArray[1], "~") == 0) {
+    if (ArgumentsArray[1] == NULL || strcmp(ArgumentsArray[1], "~") == 0) {
         if (chdir(getenv("HOME")) < 0) {
             perror(RED "cd" COLOR_RESET);
             strcpy(prev_directory_main, prev_directory_secondary);
         }
-    } else if (strcmp(StringArray[1], "-") == 0) {
+    } else if (strcmp(ArgumentsArray[1], "-") == 0) {
         if (chdir(prev_directory_secondary) < 0) {
             perror(RED "cd" COLOR_RESET);
             strcpy(prev_directory_main, prev_directory_secondary);
@@ -97,33 +97,33 @@ void cd(char *StringArray[BUFFER_SIZE], char prev_directory_main[BUFFER_SIZE],
             printf("%s\n", prev_directory_secondary);
         }
     } else {
-        if (chdir(StringArray[1]) < 0) {
+        if (chdir(ArgumentsArray[1]) < 0) {
             perror(RED "cd" COLOR_RESET);
             strcpy(prev_directory_main, prev_directory_secondary);
         }
     }
 }
 
-void mv(char *StringArray[BUFFER_SIZE], int numberOfArguments) {
+void mv(char *ArgumentsArray[BUFFER_SIZE], int numberOfArguments) {
     char tok_mv[BUFFER_SIZE];
     char *tok_mv2;
     char *ptr_mv[BUFFER_SIZE];
     char do_mv[BUFFER_SIZE];
     DIR *dir;
 
-    if (StringArray[1] == NULL || StringArray[2] == NULL) {
+    if (ArgumentsArray[1] == NULL || ArgumentsArray[2] == NULL) {
         printf(RED "mv" COLOR_RESET ": Not enough arguments");
     } else {
-        if ((dir = opendir(StringArray[numberOfArguments - 1])) == NULL) {
-            if (rename(StringArray[1], StringArray[2]) < 0) {
+        if ((dir = opendir(ArgumentsArray[numberOfArguments - 1])) == NULL) {
+            if (rename(ArgumentsArray[1], ArgumentsArray[2]) < 0) {
                 perror(RED "mv" COLOR_RESET);
             }
         } else {
             int j;
             for (j = 1; j < numberOfArguments - 1; j++) {
                 int k = 0;
-                strcpy(do_mv, StringArray[j]);
-                strcpy(tok_mv, StringArray[numberOfArguments - 1]);
+                strcpy(do_mv, ArgumentsArray[j]);
+                strcpy(tok_mv, ArgumentsArray[numberOfArguments - 1]);
                 int len = strlen(tok_mv);
                 if (tok_mv[len - 1] != '/') {
                     strcat(tok_mv, "/");
@@ -137,7 +137,7 @@ void mv(char *StringArray[BUFFER_SIZE], int numberOfArguments) {
                 }
 
                 strcat(tok_mv, ptr_mv[k - 1]);
-                if (rename(StringArray[j], tok_mv) < 0) {
+                if (rename(ArgumentsArray[j], tok_mv) < 0) {
                     perror(RED "mv" COLOR_RESET);
                 }
             }
@@ -147,36 +147,36 @@ void mv(char *StringArray[BUFFER_SIZE], int numberOfArguments) {
     }
 }
 
-void mkdir_fun(char *StringArray[BUFFER_SIZE], int numberOfArguments) {
+void mkdir_fun(char *ArgumentsArray[BUFFER_SIZE], int numberOfArguments) {
     char *tok_mkdir;
     char *ptr_mkdir[BUFFER_SIZE];
     char do_mkdir[BUFFER_SIZE];
     DIR *dir;
 
     umask(0);
-    if (strcmp(StringArray[1], "-v") == 0) {
+    if (strcmp(ArgumentsArray[1], "-v") == 0) {
         int j;
         for (j = 2; j < numberOfArguments; j++) {
-            if (mkdir(StringArray[j], 0777) < 0) {
+            if (mkdir(ArgumentsArray[j], 0777) < 0) {
                 perror(RED "mkdir" COLOR_RESET);
             } else {
                 printf(GREEN "Directory created" COLOR_RESET ": \'%s\'\n",
-                       StringArray[j]);
+                       ArgumentsArray[j]);
             }
         }
-    } else if (strcmp(StringArray[1], "-p") == 0) {
+    } else if (strcmp(ArgumentsArray[1], "-p") == 0) {
         int j;
         for (j = 2; j < numberOfArguments; j++) {
             int k = 0;
 
-            tok_mkdir = strtok(StringArray[j], "/");
+            tok_mkdir = strtok(ArgumentsArray[j], "/");
             while (tok_mkdir) {
                 ptr_mkdir[k] = tok_mkdir;
                 tok_mkdir = strtok(NULL, "/");
                 k++;
             }
 
-            strcpy(do_mkdir, StringArray[j]);
+            strcpy(do_mkdir, ArgumentsArray[j]);
 
             if ((dir = opendir(do_mkdir)) == NULL) {
                 if (mkdir(do_mkdir, 0777) < 0) {
@@ -199,20 +199,20 @@ void mkdir_fun(char *StringArray[BUFFER_SIZE], int numberOfArguments) {
                 }
             }
         }
-    } else if ((strcmp(StringArray[1], "-pv") == 0) ||
-               (strcmp(StringArray[1], "-vp") == 0)) {
+    } else if ((strcmp(ArgumentsArray[1], "-pv") == 0) ||
+               (strcmp(ArgumentsArray[1], "-vp") == 0)) {
         int j;
         for (j = 2; j < numberOfArguments; j++) {
             int k = 0;
 
-            tok_mkdir = strtok(StringArray[j], "/");
+            tok_mkdir = strtok(ArgumentsArray[j], "/");
             while (tok_mkdir) {
                 ptr_mkdir[k] = tok_mkdir;
                 tok_mkdir = strtok(NULL, "/");
                 k++;
             }
 
-            strcpy(do_mkdir, StringArray[j]);
+            strcpy(do_mkdir, ArgumentsArray[j]);
 
             if ((dir = opendir(do_mkdir)) == NULL) {
                 if (mkdir(do_mkdir, 0777) < 0) {
@@ -245,7 +245,7 @@ void mkdir_fun(char *StringArray[BUFFER_SIZE], int numberOfArguments) {
     } else {
         int j;
         for (j = 1; j < numberOfArguments; j++) {
-            if (mkdir(StringArray[j], 0777) < 0) {
+            if (mkdir(ArgumentsArray[j], 0777) < 0) {
                 perror(RED "mkdir" COLOR_RESET);
             }
         }
@@ -256,7 +256,7 @@ int main() {
     char cwd[BUFFER_SIZE];
     char command[BUFFER_SIZE];
     char *user;
-    char *StringArray[BUFFER_SIZE];
+    char *ArgumentsArray[BUFFER_SIZE];
     char *token;
     char prev_directory_main[BUFFER_SIZE];
     char prev_directory_secondary[BUFFER_SIZE];
@@ -282,13 +282,13 @@ int main() {
         int numberOfArguments = 0;
 
         while (*token) {
-            StringArray[numberOfArguments] = split(token, &token);
+            ArgumentsArray[numberOfArguments] = split(token, &token);
             numberOfArguments++;
         }
 
-        StringArray[numberOfArguments] = NULL;
+        ArgumentsArray[numberOfArguments] = NULL;
 
-        if (StringArray[0] == NULL || strcmp(StringArray[0], "") == 0) {
+        if (ArgumentsArray[0] == NULL || strcmp(ArgumentsArray[0], "") == 0) {
             continue;
         }
 
@@ -296,19 +296,19 @@ int main() {
             exit(EXIT_SUCCESS);
         } else if (strcmp(command, "help") == 0) {
             help();
-        } else if (strcmp(StringArray[0], "cd") == 0) {
-            cd(StringArray, prev_directory_main, prev_directory_secondary);
-        } else if (strcmp(StringArray[0], "mv") == 0) {
-            mv(StringArray, numberOfArguments);
-        } else if (strcmp(StringArray[0], "mkdir") == 0) {
-            mkdir_fun(StringArray, numberOfArguments);
+        } else if (strcmp(ArgumentsArray[0], "cd") == 0) {
+            cd(ArgumentsArray, prev_directory_main, prev_directory_secondary);
+        } else if (strcmp(ArgumentsArray[0], "mv") == 0) {
+            mv(ArgumentsArray, numberOfArguments);
+        } else if (strcmp(ArgumentsArray[0], "mkdir") == 0) {
+            mkdir_fun(ArgumentsArray, numberOfArguments);
         } else {
             pid_t id = fork();
 
             if (id < 0) {
                 perror(RED "Microshell" COLOR_RESET);
             } else if (id == 0) {
-                if (execvp(StringArray[0], StringArray) < 0) {
+                if (execvp(ArgumentsArray[0], ArgumentsArray) < 0) {
                     perror(RED "Microshell" COLOR_RESET);
                     exit(EXIT_FAILURE);
                 }
