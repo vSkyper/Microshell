@@ -1,5 +1,7 @@
 #include <dirent.h>
 #include <errno.h>
+#include <readline/history.h>
+#include <readline/readline.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -70,36 +72,42 @@ char *split(char *str, char **next) {
 }
 
 void help() {
-    printf(YELLOW "\nMicroshell author: " COLOR_RESET "Mateusz Piwowarski\n");
-    printf(YELLOW
-           "\nCommands:" COLOR_RESET
-           "\n>> exit\n>> help\n>> cd\n>> mv\n>> mkdir: flags: -v, -p, "
-           "-vp/-pv\n>>Commands that refer by name to programs located in "
-           "directories described by the value of the PATH environment "
-           "variable, and allow these scripts and programs to be called with "
-           "arguments\n>> Support for quotation marks: \"...\"\n");
+    printf(YELLOW "\nMicroshell author: " COLOR_RESET "Mateusz Piwowarski\n\n");
+    printf(YELLOW "Commands:\n" COLOR_RESET);
+    printf(">> exit\n");
+    printf(">> help\n");
+    printf(">> cd\n");
+    printf(">> mv\n");
+    printf(">> mkdir (flags: -v, -p, -vp/-pv)\n");
+    printf(
+        ">> Commands that refer by name to programs located in directories "
+        "described by the value of the PATH environment variable, and allow "
+        "these scripts and programs to be called with arguments\n");
+    printf(">> Support for quotation marks: \"...\"\n");
 }
 
-void cd(char *argumentsArray[BUFFER_SIZE], char prev_directory_main[BUFFER_SIZE],
-        char prev_directory_secondary[BUFFER_SIZE]) {
-    getcwd(prev_directory_secondary, BUFFER_SIZE);
+void cd(char *argumentsArray[BUFFER_SIZE], char prevDirectory[BUFFER_SIZE]) {
+    char tempDirectory[BUFFER_SIZE];
+    getcwd(tempDirectory, BUFFER_SIZE);
 
     if (argumentsArray[1] == NULL || strcmp(argumentsArray[1], "~") == 0) {
         if (chdir(getenv("HOME")) < 0) {
             perror(RED "cd" COLOR_RESET);
-            strcpy(prev_directory_secondary, prev_directory_main);
+        } else {
+            strcpy(prevDirectory, tempDirectory);
         }
     } else if (strcmp(argumentsArray[1], "-") == 0) {
-        if (chdir(prev_directory_main) < 0) {
+        if (chdir(prevDirectory) < 0) {
             perror(RED "cd" COLOR_RESET);
-            strcpy(prev_directory_secondary, prev_directory_main);
         } else {
-            printf("%s\n", prev_directory_main);
+            printf("%s\n", prevDirectory);
+            strcpy(prevDirectory, tempDirectory);
         }
     } else {
         if (chdir(argumentsArray[1]) < 0) {
             perror(RED "cd" COLOR_RESET);
-            strcpy(prev_directory_secondary, prev_directory_main);
+        } else {
+            strcpy(prevDirectory, tempDirectory);
         }
     }
 }
@@ -253,34 +261,30 @@ void mkdir_fun(char *argumentsArray[BUFFER_SIZE], int numberOfArguments) {
 }
 
 int main() {
-    char cwd[BUFFER_SIZE];
+    char cwd[BUFFER_SIZE * 1 / 3];
     char *user;
+    char *command;
     char *token;
-    char command[BUFFER_SIZE];
+    char commandPrompt[BUFFER_SIZE];
     char *argumentsArray[BUFFER_SIZE];
-    char prev_directory_secondary[BUFFER_SIZE];
-    char prev_directory_main[BUFFER_SIZE];
+    char prevDirectory[BUFFER_SIZE];
 
-    getcwd(prev_directory_secondary, BUFFER_SIZE);
+    getcwd(prevDirectory, BUFFER_SIZE);
 
     while (1) {
-        strcpy(prev_directory_main, prev_directory_secondary);
-
-        getcwd(cwd, BUFFER_SIZE);
-
+        getcwd(cwd, sizeof(cwd));
         user = getenv("USER");
 
-        printf("\n[" CYAN "%s" COLOR_RESET ":" BLUE "%s" COLOR_RESET "]\n$ ",
-               user, cwd);
+        sprintf(commandPrompt, "\n[ %s%s%s : %s%s%s ]\n$ ", CYAN, user,
+                COLOR_RESET, BLUE, cwd, COLOR_RESET);
 
-        fgets(command, BUFFER_SIZE, stdin);
-
+        command = readline(commandPrompt);
         command[strcspn(command, "\r\n")] = '\0';
+        add_history(command);
 
         token = command;
 
         int numberOfArguments = 0;
-
         while (*token) {
             argumentsArray[numberOfArguments] = split(token, &token);
             numberOfArguments++;
@@ -297,7 +301,7 @@ int main() {
         } else if (strcmp(command, "help") == 0) {
             help();
         } else if (strcmp(argumentsArray[0], "cd") == 0) {
-            cd(argumentsArray, prev_directory_main, prev_directory_secondary);
+            cd(argumentsArray, prevDirectory);
         } else if (strcmp(argumentsArray[0], "mv") == 0) {
             mv(argumentsArray, numberOfArguments);
         } else if (strcmp(argumentsArray[0], "mkdir") == 0) {
